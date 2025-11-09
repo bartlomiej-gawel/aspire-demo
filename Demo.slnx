@@ -1,1 +1,6 @@
-<Solution />
+<Solution>
+  <Folder Name="/aspire/">
+    <Project Path="aspire\Demo.AppHost\Demo.AppHost.csproj" Type="Classic C#" />
+    <Project Path="aspire\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" Type="Classic C#" />
+  </Folder>
+</Solution>
