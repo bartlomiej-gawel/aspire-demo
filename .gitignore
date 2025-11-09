@@ -47,7 +47,7 @@ CodeCoverage/
 .history/
 
 # JetBrains Rider
-*.idea/
+.idea/
 *.sln.iml
 
 # ReSharper
@@ -56,9 +56,8 @@ _ReSharper*/
 *.DotSettings.user
 
 # Containers
-*.containers/
+.containers/
 
 # macOS
-../.DS_Store
 .DS_Store
-*.DS_Store
+**/.DS_Store

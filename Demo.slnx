@@ -1,6 +1,17 @@
 <Solution>
   <Folder Name="/aspire/">
-    <Project Path="aspire\Demo.AppHost\Demo.AppHost.csproj" Type="Classic C#" />
-    <Project Path="aspire\Demo.ServiceDefaults\Demo.ServiceDefaults.csproj" Type="Classic C#" />
+    <Project Path="aspire/Demo.AppHost/Demo.AppHost.csproj" />
+    <Project Path="aspire/Demo.ServiceDefaults/Demo.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/services/" />
+  <Folder Name="/services/identity/">
+    <Project Path="services\identity\Demo.Services.Identity.Api\Demo.Services.Identity.Api.csproj" Type="Classic C#" />
+    <Project Path="services\identity\Demo.Services.Identity.Domain\Demo.Services.Identity.Domain.csproj" Type="Classic C#" />
+    <Project Path="services\identity\Demo.Services.Identity.Infrastructure\Demo.Services.Identity.Infrastructure.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/services/organizations/">
+    <Project Path="services/organizations/Demo.Services.Organizations.Api/Demo.Services.Organizations.Api.csproj" />
+    <Project Path="services/organizations/Demo.Services.Organizations.Domain/Demo.Services.Organizations.Domain.csproj" />
+    <Project Path="services/organizations/Demo.Services.Organizations.Infrastructure/Demo.Services.Organizations.Infrastructure.csproj" />
   </Folder>
 </Solution>
