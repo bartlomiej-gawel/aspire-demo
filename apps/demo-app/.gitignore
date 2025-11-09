@@ -14,15 +14,18 @@ dist-ssr
 coverage
 *.local
 
-# Editor directories and files
+# VS Code
 .vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 !.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.code-workspace
+.history/
+
+# WebStorm
+.idea/
+*.sln.iml
 
 *.tsbuildinfo
 .eslintcache
