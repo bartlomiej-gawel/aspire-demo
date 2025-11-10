@@ -6,14 +6,14 @@ var postgres = builder.AddPostgres("demo-postgres")
     .WithLifetime(ContainerLifetime.Persistent)
     .AddDatabase("demo-db");
 
-builder.AddNpmApp("demo-app", "../../frontend/demo-app")
+builder.AddNpmApp("demo-app", "../../apps/demo-app")
     .WithReference(weatherApi)
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(env: "VITE_PORT")
     .WithExternalHttpEndpoints()
     .PublishAsDockerFile();
 
-builder.AddNpmApp("demo-backoffice-app", "../../frontend/demo-backoffice-app")
+builder.AddNpmApp("demo-backoffice-app", "../../apps/demo-backoffice-app")
     .WithReference(weatherApi)
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(env: "VITE_PORT")
