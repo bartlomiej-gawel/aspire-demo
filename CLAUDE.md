@@ -95,28 +95,31 @@ dotnet test Demo.slnx
 
 ### AppHost (aspire/Demo.Aspire.AppHost/Program.cs)
 
-The AppHost is the orchestrator for the distributed application. Currently, it has a minimal configuration with all resources commented out. When enabled, it can define and coordinate resources such as:
+The AppHost is the orchestrator for the distributed application using Aspire 13's JavaScript-first approach:
 
-**Infrastructure Resources (when uncommented):**
+**Infrastructure Resources:**
 - PostgreSQL container (`demo-postgres`) with persistent storage at `.containers/postgres`
 - Uses `postgres:latest` image
 - Container lifetime set to `Persistent` to preserve data across restarts
 
-**Frontend Applications (when uncommented):**
-- `demo-app` - Primary React app served via Vite dev server
-- `demo-backoffice-app` - Backoffice React app served via Vite dev server
-- Both apps:
-  - Use `AddNpmApp()` to integrate with Aspire orchestration
-  - Run the `dev` npm script
+**Frontend Applications:**
+- `demo-app` - Primary React app using `AddViteApp()`
+- `demo-backoffice-app` - Backoffice React app using `AddViteApp()`
+- Both apps leverage Aspire 13's Vite-specific optimizations:
+  - Automatic port binding (no manual `WithHttpEndpoint` needed)
+  - Automatic npm/yarn/pnpm detection from package.json
+  - Automatic "dev" script execution during development
+  - Automatic "build" script execution during publishing
+  - Automatic Dockerfile generation (no `PublishAsDockerFile()` needed)
+  - Hot Module Replacement (HMR) support
   - Disable browser auto-open (`BROWSER=none`)
-  - Expose HTTP endpoints via `VITE_PORT` environment variable
-  - Configured for external HTTP access
-  - Include `PublishAsDockerFile()` for containerized deployments
+  - Configured for external HTTP access via `WithExternalHttpEndpoints()`
 
 Key patterns:
 - Uses `DistributedApplication.CreateBuilder(args)` to create the app
 - Resources are defined using fluent builder pattern
-- Vite port configuration is handled through environment variables
+- `AddViteApp()` replaces the deprecated `AddNpmApp()` with enhanced Vite support
+- Package: `Aspire.Hosting.JavaScript` v13.0.0 (replaces `Aspire.Hosting.NodeJs`)
 
 ### API Gateway (gateway/Demo.Gateway/Program.cs)
 
