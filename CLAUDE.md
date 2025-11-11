@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a .NET Aspire application built on .NET 9.0. .NET Aspire is an opinionated, cloud-ready stack for building observable, production-ready, distributed applications. The solution follows the standard Aspire architecture pattern with an AppHost orchestrator and a ServiceDefaults library.
+This is a .NET Aspire application built on .NET 10.0. .NET Aspire is an opinionated, cloud-ready stack for building observable, production-ready, distributed applications. The solution follows the standard Aspire architecture pattern with an AppHost orchestrator and a ServiceDefaults library.
 
 ## Project Structure
 
 - `Demo.slnx` - Solution file at the root
-- `aspire/Demo.AppHost/` - Aspire AppHost orchestrator that defines the distributed application
-- `aspire/Demo.ServiceDefaults/` - Shared service defaults library containing common configurations
+- `aspire/Demo.Aspire.AppHost/` - Aspire AppHost orchestrator that defines the distributed application
+- `aspire/Demo.Aspire.ServiceDefaults/` - Shared service defaults library containing common configurations
+- `gateway/Demo.Gateway/` - API Gateway using YARP (Yet Another Reverse Proxy)
 - `services/` - Backend microservices organized by domain (Identity, Organizations)
   - Each service follows a 3-layer architecture: Api, Domain, Infrastructure
 - `apps/` - Frontend applications
@@ -20,8 +21,9 @@ This is a .NET Aspire application built on .NET 9.0. .NET Aspire is an opinionat
 ## Key Technologies
 
 **Backend:**
-- .NET 9.0
-- .NET Aspire 9.5.2
+- .NET 10.0
+- .NET Aspire 13.0.0
+- YARP 2.3.0 for API Gateway
 - PostgreSQL (containerized)
 - OpenTelemetry for observability (metrics, traces, logs)
 - Serilog for structured logging
@@ -40,7 +42,7 @@ This is a .NET Aspire application built on .NET 9.0. .NET Aspire is an opinionat
 
 ```bash
 # Run the entire distributed application (starts all services and frontends)
-dotnet run --project aspire/Demo.AppHost/Demo.AppHost.csproj
+dotnet run --project aspire/Demo.Aspire.AppHost/Demo.Aspire.AppHost.csproj
 
 # Build the entire solution
 dotnet build Demo.slnx
@@ -51,9 +53,11 @@ dotnet restore Demo.slnx
 # Build a specific service
 dotnet build services/identity/Demo.Services.Identity.Api/Demo.Services.Identity.Api.csproj
 dotnet build services/organizations/Demo.Services.Organizations.Api/Demo.Services.Organizations.Api.csproj
+dotnet build gateway/Demo.Gateway/Demo.Gateway.csproj
 
 # Run a specific service directly (without Aspire orchestration)
 dotnet run --project services/identity/Demo.Services.Identity.Api/Demo.Services.Identity.Api.csproj
+dotnet run --project gateway/Demo.Gateway/Demo.Gateway.csproj
 ```
 
 ### Frontend Development
@@ -89,16 +93,16 @@ dotnet test Demo.slnx
 
 ## Architecture
 
-### AppHost (aspire/Demo.AppHost/Program.cs)
+### AppHost (aspire/Demo.Aspire.AppHost/Program.cs)
 
-The AppHost is the orchestrator for the distributed application. It defines and coordinates all resources:
+The AppHost is the orchestrator for the distributed application. Currently, it has a minimal configuration with all resources commented out. When enabled, it can define and coordinate resources such as:
 
-**Infrastructure Resources:**
+**Infrastructure Resources (when uncommented):**
 - PostgreSQL container (`demo-postgres`) with persistent storage at `.containers/postgres`
 - Uses `postgres:latest` image
 - Container lifetime set to `Persistent` to preserve data across restarts
 
-**Frontend Applications:**
+**Frontend Applications (when uncommented):**
 - `demo-app` - Primary React app served via Vite dev server
 - `demo-backoffice-app` - Backoffice React app served via Vite dev server
 - Both apps:
@@ -114,7 +118,20 @@ Key patterns:
 - Resources are defined using fluent builder pattern
 - Vite port configuration is handled through environment variables
 
-### ServiceDefaults (aspire/Demo.ServiceDefaults/Extensions.cs)
+### API Gateway (gateway/Demo.Gateway/Program.cs)
+
+A centralized API Gateway built with YARP (Yet Another Reverse Proxy) 2.3.0:
+
+**Key Features:**
+- Reverse proxy for routing requests to backend services
+- Configuration-based routing via `ReverseProxy` section in appsettings
+- Loads proxy configuration from `builder.Configuration.GetSection("ReverseProxy")`
+- Maps routes using `app.MapReverseProxy()`
+
+**Usage:**
+The gateway sits between frontend applications and backend services, providing a single entry point for API requests and enabling cross-cutting concerns like routing, load balancing, and request transformation.
+
+### ServiceDefaults (aspire/Demo.Aspire.ServiceDefaults/Extensions.cs)
 
 The ServiceDefaults library provides common cross-cutting concerns for all services:
 
@@ -149,7 +166,7 @@ The solution follows a domain-driven design approach with services organized by 
 - Infrastructure layer: Data access and external integrations
 
 **Common patterns across services:**
-- All service projects target .NET 9.0
+- All service projects target .NET 10.0
 - `TreatWarningsAsErrors` is enabled
 - Services should integrate ServiceDefaults for observability and resilience
 - Each service can be run independently or through the AppHost orchestrator
