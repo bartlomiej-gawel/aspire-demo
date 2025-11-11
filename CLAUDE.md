@@ -33,8 +33,13 @@ This is a .NET Aspire application built on .NET 10.0. .NET Aspire is an opiniona
 - React 19.2.0
 - Vite 7.2.2
 - TypeScript 5.9.3
+- TailwindCSS 4.1.17 with Vite plugin
+- Radix UI (headless component primitives)
+- shadcn/ui (UI component system)
+- Lucide React (icon library)
 - ESLint for linting
 - React Compiler (Babel plugin)
+- CVA (Class Variance Authority) for component variants
 
 ## Common Commands
 
@@ -181,7 +186,26 @@ Both React applications follow the same structure:
 - TypeScript for type safety
 - React 19 with React Compiler for optimized rendering
 - ESLint for code quality
+- TailwindCSS for styling with utility-first approach
+- shadcn/ui components in `src/components/ui/`
+- Path aliases: `@/*` maps to `./src/*` (configured in tsconfig.json and tsconfig.app.json)
 - Standard Vite project structure with `src/` directory
+- Multi-stage Docker builds (Node 24 build → Nginx Alpine runtime)
+
+**UI Component Stack:**
+- **shadcn/ui**: Copy-paste component system built on Radix UI primitives
+- **Radix UI**: Unstyled, accessible component primitives
+- **TailwindCSS**: Utility-first CSS framework for styling
+- **CVA**: Type-safe component variants
+- **Lucide React**: Icon library
+- **tailwind-merge & clsx**: Utility class management
+
+**Import Convention:**
+Use the `@/` alias for all internal imports to maintain clean import paths:
+```typescript
+import { Button } from "@/components/ui/button"
+import { utils } from "@/lib/utils"
+```
 
 ## Development Notes
 
@@ -191,3 +215,22 @@ Both React applications follow the same structure:
 - Health check endpoints are only mapped in Development environment
 - PostgreSQL data is persisted to `.containers/postgres` directory (ignored by git)
 - When running through Aspire AppHost, all services and frontends start together with proper service discovery
+
+## Naming Conventions
+
+**Backend Projects:**
+- Pattern: `Demo.{Area}.{Component}.{Layer}`
+- Examples:
+  - `Demo.Services.Identity.Api`
+  - `Demo.Services.Organizations.Domain`
+  - `Demo.Aspire.AppHost`
+  - `Demo.Gateway`
+
+**Frontend Projects:**
+- Pattern: kebab-case
+- Examples: `demo-app`, `demo-backoffice-app`
+
+**Path Aliases:**
+- Both frontend projects use `@/*` to reference `./src/*`
+- This alias must be configured in both `tsconfig.json` and `tsconfig.app.json`
+- Each project's alias is scoped to its own `src/` directory (no cross-project imports)
