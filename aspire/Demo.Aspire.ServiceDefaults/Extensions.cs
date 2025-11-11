@@ -10,7 +10,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
 
-namespace Demo.ServiceDefaults;
+namespace Demo.Aspire.ServiceDefaults;
 
 public static class Extensions
 {
