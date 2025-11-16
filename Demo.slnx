@@ -1,20 +1,20 @@
 <Solution>
-  <Folder Name="/aspire/">
-    <Project Path="aspire/Demo.Aspire.AppHost/Demo.Aspire.AppHost.csproj" />
-    <Project Path="aspire/Demo.Aspire.ServiceDefaults/Demo.Aspire.ServiceDefaults.csproj" />
-  </Folder>
-  <Folder Name="/gateway/">
-    <Project Path="gateway/Demo.Gateway/Demo.Gateway.csproj" />
-  </Folder>
-  <Folder Name="/services/" />
-  <Folder Name="/services/identity/">
-    <Project Path="services/identity/Demo.Services.Identity.Api/Demo.Services.Identity.Api.csproj" />
-    <Project Path="services/identity/Demo.Services.Identity.Domain/Demo.Services.Identity.Domain.csproj" />
-    <Project Path="services/identity/Demo.Services.Identity.Infrastructure/Demo.Services.Identity.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/services/organizations/">
-    <Project Path="services/organizations/Demo.Services.Organizations.Api/Demo.Services.Organizations.Api.csproj" />
-    <Project Path="services/organizations/Demo.Services.Organizations.Domain/Demo.Services.Organizations.Domain.csproj" />
-    <Project Path="services/organizations/Demo.Services.Organizations.Infrastructure/Demo.Services.Organizations.Infrastructure.csproj" />
-  </Folder>
+    <Folder Name="/aspire/">
+        <Project Path="aspire/Demo.Aspire.AppHost/Demo.Aspire.AppHost.csproj" />
+        <Project Path="aspire/Demo.Aspire.ServiceDefaults/Demo.Aspire.ServiceDefaults.csproj" />
+    </Folder>
+    <Folder Name="/gateway/">
+        <Project Path="gateway/Demo.Gateway/Demo.Gateway.csproj" />
+    </Folder>
+    <Folder Name="/services/" />
+    <Folder Name="/services/identity/">
+        <Project Path="services/identity/Demo.Services.Identity.Api/Demo.Services.Identity.Api.csproj" />
+        <Project Path="services/identity/Demo.Services.Identity.Domain/Demo.Services.Identity.Domain.csproj" />
+        <Project Path="services/identity/Demo.Services.Identity.Infrastructure/Demo.Services.Identity.Infrastructure.csproj" />
+    </Folder>
+    <Folder Name="/services/organizations/">
+        <Project Path="services/organizations/Demo.Services.Organizations.Api/Demo.Services.Organizations.Api.csproj" />
+        <Project Path="services/organizations/Demo.Services.Organizations.Domain/Demo.Services.Organizations.Domain.csproj" />
+        <Project Path="services/organizations/Demo.Services.Organizations.Infrastructure/Demo.Services.Organizations.Infrastructure.csproj" />
+    </Folder>
 </Solution>
