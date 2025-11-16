@@ -103,9 +103,8 @@ dotnet test Demo.slnx
 The AppHost is the orchestrator for the distributed application using Aspire 13's JavaScript-first approach:
 
 **Infrastructure Resources:**
-- PostgreSQL container (`demo-postgres`) with persistent storage at `.containers/postgres`
-- Uses `postgres:latest` image
-- Container lifetime set to `Persistent` to preserve data across restarts
+- PostgreSQL container configuration is available but currently commented out
+- When enabled: uses `postgres:latest` with persistent storage at `.containers/postgres`
 
 **Frontend Applications:**
 - `demo-app` - Primary React app using `AddViteApp()`
@@ -170,14 +169,53 @@ The solution follows a domain-driven design approach with services organized by 
 
 **Organizations Service** (`services/organizations/`):
 - Api layer: ASP.NET Core Web API
-- Domain layer: Business logic and entities
+- Domain layer: Business logic and entities (implements DDD building blocks)
 - Infrastructure layer: Data access and external integrations
+
+**Domain Layer Patterns**:
+
+The Organizations service implements tactical DDD patterns in `Demo.Services.Organizations.Domain/Abstractions/`:
+
+- **Entity<TId>**: Base class for domain entities with identity-based equality
+  - Implements `IEquatable<Entity<TId>>` with ID-based comparison
+  - Includes operator overloads for equality checks
+  - Hash code based on both type and ID
+
+- **AggregateRoot<TId>**: Extends Entity to mark aggregate boundaries
+  - Inherits from `Entity<TId>` and implements `IAggregateRoot`
+  - Defines transaction and consistency boundaries
+
+- **ValueObject**: Base class for immutable value objects
+  - Implements structural equality via `GetEqualityComponents()`
+  - Derived classes override `GetEqualityComponents()` to define equality
+  - Immutable by convention (use private setters or init-only properties)
+
+- **CompositeEntity**: For child entities within an aggregate that need both parent reference and own identity
+
+Example domain entity pattern (see `Organizations/Organization.cs`):
+```csharp
+public sealed class Organization : AggregateRoot<OrganizationId>
+{
+    private readonly List<OrganizationLocation> _locations = [];
+
+    private Organization() { } // EF Core constructor
+    private Organization(OrganizationId id, string name) : base(id) { }
+
+    public string Name { get; private set; } = null!;
+    public IReadOnlyList<OrganizationLocation> Locations => _locations.AsReadOnly();
+
+    public static Organization Create(string name) => new(OrganizationId.Create(), name);
+}
+```
 
 **Common patterns across services:**
 - All service projects target .NET 10.0
 - `TreatWarningsAsErrors` is enabled
 - Services should integrate ServiceDefaults for observability and resilience
 - Each service can be run independently or through the AppHost orchestrator
+- Domain entities use strongly-typed IDs (e.g., `OrganizationId` instead of `Guid`)
+- Aggregate roots expose collections as `IReadOnlyList<T>` backed by private fields
+- Entity creation uses static factory methods (e.g., `Create()`) rather than public constructors
 
 ### Frontend Architecture
 
