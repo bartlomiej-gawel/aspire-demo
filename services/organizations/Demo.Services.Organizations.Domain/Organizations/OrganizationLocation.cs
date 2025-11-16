@@ -21,7 +21,7 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
         Address = null;
         Status = status;
         CreatedAt = DateTime.UtcNow;
-        UpdatedAt = null!;
+        UpdatedAt = null;
     }
 
     public OrganizationId OrganizationId { get; } = null!;
@@ -31,4 +31,16 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
     public OrganizationLocationStatus Status { get; private set; }
     public DateTime CreatedAt { get; }
     public DateTime? UpdatedAt { get; private set; }
+
+    public static OrganizationLocation CreateDefault(
+        OrganizationId organizationId,
+        string organizationName)
+    {
+        return new OrganizationLocation(
+            OrganizationLocationId.Create(),
+            organizationId,
+            $"{organizationName} Headquarters",
+            OrganizationLocationOpeningHours.CreateDefault(),
+            OrganizationLocationStatus.Active);
+    }
 }

@@ -11,7 +11,9 @@ public sealed class Organization : AggregateRoot<OrganizationId>
     {
     }
 
-    private Organization(OrganizationId id, string name) : base(id)
+    private Organization(
+        OrganizationId id,
+        string name) : base(id)
     {
         Name = name;
         Status = OrganizationStatus.Inactive;
@@ -26,8 +28,43 @@ public sealed class Organization : AggregateRoot<OrganizationId>
     public IReadOnlyList<OrganizationLocation> Locations => _locations.AsReadOnly();
     public IReadOnlyList<OrganizationEmployee> Employees => _employees.AsReadOnly();
 
-    public static Organization Create(string name)
+    public static Organization CreateFromBackoffice(
+        string organizationName,
+        List<OrganizationEmployeeData> organizationAdmins)
     {
-        return new Organization(OrganizationId.Create(), name);
+        if (organizationAdmins.Count == 0)
+            throw new ArgumentException("At least one admin is required");
+
+        var organizationId = OrganizationId.Create();
+
+        var organization = new Organization(
+            organizationId,
+            organizationName);
+
+        var defaultLocation = OrganizationLocation.CreateDefault(
+            organizationId,
+            organizationName);
+
+        organization._locations.Add(defaultLocation);
+
+        foreach (var organizationAdmin in organizationAdmins)
+        {
+            var admin = OrganizationEmployee.CreateAdmin(
+                organizationId,
+                defaultLocation.Id,
+                organizationAdmin.FirstName,
+                organizationAdmin.LastName,
+                organizationAdmin.Email,
+                organizationAdmin.Phone);
+
+            organization._employees.Add(admin);
+        }
+
+        return organization;
+    }
+
+    public static Organization CreateFromRegistration()
+    {
+        throw new NotImplementedException();
     }
 }

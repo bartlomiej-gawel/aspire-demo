@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Organization } from '@/types/organization'
+import type { Organization, CreateOrganizationData } from '@/types/organization'
+import { OrganizationStatus, OrganizationEmployeeStatus, OrganizationEmployeeRole, OrganizationLocationStatus } from '@/types/organization'
 import { mockOrganizations } from '@/data/mock-organizations'
-import OrganizationFormDialog from './OrganizationFormDialog.vue'
+import OrganizationFormSheet from './OrganizationFormSheet.vue'
 import {
   getOrganizationStatusLabel,
   getOrganizationStatusVariant,
@@ -34,31 +35,71 @@ function handleEdit(organization: Organization) {
   isDialogOpen.value = true
 }
 
-function handleSave(organizationData: Partial<Organization>) {
-  if (organizationData.id) {
-    // Edit existing
+function isCreateOrganizationData(data: any): data is CreateOrganizationData {
+  return 'organizationName' in data && 'organizationAdmins' in data
+}
+
+function handleSave(data: Partial<Organization> | CreateOrganizationData) {
+  if (isCreateOrganizationData(data)) {
+    // Create new organization from backoffice
+    const organizationId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const newOrganization: Organization = {
+      id: organizationId,
+      name: data.organizationName,
+      status: OrganizationStatus.Inactive,
+      createdAt: now,
+      updatedAt: null,
+      locations: [
+        {
+          id: crypto.randomUUID(),
+          organizationId,
+          name: `${data.organizationName} Headquarters`,
+          openingHours: {
+            weekly: {
+              0: { from: '09:00', to: '17:00', isEnabled: false },
+              1: { from: '09:00', to: '17:00', isEnabled: true },
+              2: { from: '09:00', to: '17:00', isEnabled: true },
+              3: { from: '09:00', to: '17:00', isEnabled: true },
+              4: { from: '09:00', to: '17:00', isEnabled: true },
+              5: { from: '09:00', to: '17:00', isEnabled: true },
+              6: { from: '10:00', to: '14:00', isEnabled: true },
+            },
+          },
+          address: null,
+          status: OrganizationLocationStatus.Active,
+          createdAt: now,
+          updatedAt: null,
+        },
+      ],
+      employees: data.organizationAdmins.map(admin => ({
+        id: crypto.randomUUID(),
+        organizationId,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        phone: admin.phone,
+        status: OrganizationEmployeeStatus.Inactive,
+        role: OrganizationEmployeeRole.Admin,
+        createdAt: now,
+        updatedAt: null,
+      })),
+    }
+
+    organizations.value.push(newOrganization)
+  }
+  else if (data.id) {
+    // Edit existing organization
     organizations.value = organizations.value.map(org =>
-      org.id === organizationData.id
+      org.id === data.id
         ? {
             ...org,
-            ...organizationData,
+            ...data,
             updatedAt: new Date().toISOString(),
           }
         : org,
     )
-  }
-  else {
-    // Create new
-    const newOrganization: Organization = {
-      id: crypto.randomUUID(),
-      name: organizationData.name!,
-      status: organizationData.status!,
-      createdAt: new Date().toISOString(),
-      updatedAt: null,
-      locations: [],
-      employees: [],
-    }
-    organizations.value.push(newOrganization)
   }
 }
 </script>
@@ -132,7 +173,7 @@ function handleSave(organizationData: Partial<Organization>) {
       </Table>
     </div>
 
-    <OrganizationFormDialog
+    <OrganizationFormSheet
       v-model:open="isDialogOpen"
       :organization="selectedOrganization"
       @save="handleSave"

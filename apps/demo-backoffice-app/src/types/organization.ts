@@ -73,6 +73,13 @@ export interface OrganizationLocation {
   updatedAt: string | null
 }
 
+export interface OrganizationEmployeeData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string | null
+}
+
 export interface OrganizationEmployee {
   id: string
   organizationId: string
@@ -94,4 +101,9 @@ export interface Organization {
   updatedAt: string | null
   locations: OrganizationLocation[]
   employees: OrganizationEmployee[]
+}
+
+export interface CreateOrganizationData {
+  organizationName: string
+  organizationAdmins: OrganizationEmployeeData[]
 }
