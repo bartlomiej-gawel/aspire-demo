@@ -67,4 +67,12 @@ public sealed class Organization : AggregateRoot<OrganizationId>
     {
         throw new NotImplementedException();
     }
+
+    public void Update(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Organization name is required to update");
+
+        Name = name;
+    }
 }

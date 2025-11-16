@@ -16,7 +16,7 @@ This is a .NET Aspire application built on .NET 10.0. .NET Aspire is an opiniona
   - Each service follows a 3-layer architecture: Api, Domain, Infrastructure
 - `apps/` - Frontend applications
   - `demo-app/` - Primary React application (Vite + TypeScript)
-  - `demo-backoffice-app/` - Backoffice React application (Vite + TypeScript)
+  - `demo-backoffice-app/` - Backoffice Vue.js application (Vite + TypeScript)
 
 ## Key Technologies
 
@@ -30,6 +30,8 @@ This is a .NET Aspire application built on .NET 10.0. .NET Aspire is an opiniona
 - Service discovery and resilience patterns
 
 **Frontend:**
+
+*demo-app (React):*
 - React 19.2.0
 - Vite 7.2.2
 - TypeScript 5.9.3
@@ -39,6 +41,17 @@ This is a .NET Aspire application built on .NET 10.0. .NET Aspire is an opiniona
 - Lucide React (icon library)
 - ESLint for linting
 - React Compiler (Babel plugin)
+- CVA (Class Variance Authority) for component variants
+
+*demo-backoffice-app (Vue.js):*
+- Vue 3.5.13
+- Vite 7.2.2
+- TypeScript 5.9.3
+- TailwindCSS 4.1.17 with Vite plugin
+- Radix Vue (headless component primitives)
+- shadcn-vue (UI component system)
+- Lucide Vue Next (icon library)
+- ESLint for linting
 - CVA (Class Variance Authority) for component variants
 
 ## Common Commands
@@ -87,6 +100,16 @@ cd apps/demo-backoffice-app && npm run lint
 # Preview production builds
 cd apps/demo-app && npm run preview
 cd apps/demo-backoffice-app && npm run preview
+
+# Add shadcn/ui components (React - demo-app)
+cd apps/demo-app
+npx shadcn@latest add button
+npx shadcn@latest add table
+
+# Add shadcn-vue components (Vue - demo-backoffice-app)
+cd apps/demo-backoffice-app
+npx shadcn-vue@latest add button
+npx shadcn-vue@latest add table
 ```
 
 ### Testing
@@ -108,7 +131,7 @@ The AppHost is the orchestrator for the distributed application using Aspire 13'
 
 **Frontend Applications:**
 - `demo-app` - Primary React app using `AddViteApp()`
-- `demo-backoffice-app` - Backoffice React app using `AddViteApp()`
+- `demo-backoffice-app` - Backoffice Vue.js app using `AddViteApp()`
 - Both apps leverage Aspire 13's Vite-specific optimizations:
   - Automatic port binding (no manual `WithHttpEndpoint` needed)
   - Automatic npm/yarn/pnpm detection from package.json
@@ -170,6 +193,10 @@ The solution follows a domain-driven design approach with services organized by 
 **Organizations Service** (`services/organizations/`):
 - Api layer: ASP.NET Core Web API
 - Domain layer: Business logic and entities (implements DDD building blocks)
+  - `Organization`: Aggregate root managing locations and employees
+  - `OrganizationLocation`: Entity representing physical locations
+  - `OrganizationEmployee`: Entity representing employees assigned to locations
+  - `OrganizationId`, `OrganizationLocationId`, `OrganizationEmployeeId`: Strongly-typed IDs
 - Infrastructure layer: Data access and external integrations
 
 **Domain Layer Patterns**:
@@ -197,16 +224,59 @@ Example domain entity pattern (see `Organizations/Organization.cs`):
 public sealed class Organization : AggregateRoot<OrganizationId>
 {
     private readonly List<OrganizationLocation> _locations = [];
+    private readonly List<OrganizationEmployee> _employees = [];
 
     private Organization() { } // EF Core constructor
-    private Organization(OrganizationId id, string name) : base(id) { }
+    private Organization(OrganizationId id, string name) : base(id)
+    {
+        Name = name;
+        Status = OrganizationStatus.Inactive;
+    }
 
     public string Name { get; private set; } = null!;
+    public OrganizationStatus Status { get; private set; }
     public IReadOnlyList<OrganizationLocation> Locations => _locations.AsReadOnly();
+    public IReadOnlyList<OrganizationEmployee> Employees => _employees.AsReadOnly();
 
-    public static Organization Create(string name) => new(OrganizationId.Create(), name);
+    // Factory method for creating organization from backoffice
+    public static Organization CreateFromBackoffice(
+        string organizationName,
+        List<OrganizationEmployeeData> organizationAdmins)
+    {
+        var organization = new Organization(OrganizationId.Create(), organizationName);
+        var location = OrganizationLocation.CreateDefault(organization.Id, organizationName);
+        organization._locations.Add(location);
+
+        foreach (var admin in organizationAdmins)
+        {
+            var employee = OrganizationEmployee.CreateAdmin(
+                organization.Id,
+                location.Id,
+                admin.FirstName,
+                admin.LastName,
+                admin.Email,
+                admin.Phone);
+            organization._employees.Add(employee);
+        }
+        return organization;
+    }
+
+    // Method for updating organization from backoffice
+    public void UpdateFromBackoffice(string name, OrganizationStatus status)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Organization name is required");
+        Name = name;
+        Status = status;
+    }
 }
 ```
+
+Key patterns demonstrated:
+- Factory methods for different creation contexts (`CreateFromBackoffice`)
+- Employees are automatically assigned to the default location during creation
+- Aggregate root controls all modifications to child entities
+- Backoffice operations are limited to name and status updates
 
 **Common patterns across services:**
 - All service projects target .NET 10.0
@@ -219,7 +289,7 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
 ### Frontend Architecture
 
-Both React applications follow the same structure:
+**demo-app (React):**
 - Built with Vite for fast development and optimized production builds
 - TypeScript for type safety
 - React 19 with React Compiler for optimized rendering
@@ -230,7 +300,7 @@ Both React applications follow the same structure:
 - Standard Vite project structure with `src/` directory
 - Multi-stage Docker builds (Node 24 build → Nginx Alpine runtime)
 
-**UI Component Stack:**
+**UI Component Stack (React):**
 - **shadcn/ui**: Copy-paste component system built on Radix UI primitives
 - **Radix UI**: Unstyled, accessible component primitives
 - **TailwindCSS**: Utility-first CSS framework for styling
@@ -238,11 +308,66 @@ Both React applications follow the same structure:
 - **Lucide React**: Icon library
 - **tailwind-merge & clsx**: Utility class management
 
-**Import Convention:**
+**demo-backoffice-app (Vue.js):**
+- Built with Vite for fast development and optimized production builds
+- TypeScript for type safety
+- Vue 3.5 with Composition API (`<script setup>`)
+- ESLint for code quality
+- TailwindCSS for styling with utility-first approach
+- shadcn-vue components in `src/components/ui/`
+- Path aliases: `@/*` maps to `./src/*` (configured in tsconfig.json and tsconfig.app.json)
+- Standard Vite project structure with `src/` directory
+- Hash-based routing for navigation (`#organizations`, `#employees/:id`)
+
+**UI Component Stack (Vue):**
+- **shadcn-vue**: Copy-paste component system built on Radix Vue primitives
+- **Radix Vue**: Unstyled, accessible component primitives
+- **TailwindCSS**: Utility-first CSS framework for styling
+- **CVA**: Type-safe component variants
+- **Lucide Vue Next**: Icon library
+- **tailwind-merge & clsx**: Utility class management
+
+**Backoffice Application Structure:**
+- `src/components/organizations/` - Organization management components
+  - `OrganizationsList.vue` - Main list view with create/edit capabilities
+  - `OrganizationFormSheet.vue` - Side sheet for creating/editing organizations
+  - `OrganizationEmployeesList.vue` - Employee list for specific organization
+- `src/components/ui/` - shadcn-vue UI components (Table, Button, Badge, Sheet, Dropdown, etc.)
+- `src/types/organization.ts` - TypeScript types matching backend domain
+- `src/data/mock-organizations.ts` - Mock data for development
+- `src/lib/organization-utils.ts` - Helper functions (formatters, status labels)
+
+**Backoffice Routing:**
+- `#organizations` - Main organizations list
+- `#employees/:organizationId` - Employees for specific organization
+- Breadcrumbs show navigation path (Backoffice > Organizations > [Org Name] > Employees)
+
+**Backoffice vs Owner Responsibilities:**
+
+*Backoffice Admin (demo-backoffice-app) can:*
+- Create organizations with initial administrators
+- Update organization name and status (Inactive/Active/Archived)
+- View all employees across organizations (read-only)
+- View organization locations (read-only)
+
+*Organization Owner (demo-app) can:*
+- Manage locations (add, edit, delete, set opening hours)
+- Manage employees (invite, edit roles, remove)
+- Edit organization details within their organization
+- Manage day-to-day operations
+
+This separation ensures system administrators handle organization onboarding and status management, while organization owners control their own operational data.
+
+**Import Convention (both apps):**
 Use the `@/` alias for all internal imports to maintain clean import paths:
 ```typescript
+// React (demo-app)
 import { Button } from "@/components/ui/button"
 import { utils } from "@/lib/utils"
+
+// Vue (demo-backoffice-app)
+import { Button } from '@/components/ui/button'
+import { formatDate } from '@/lib/organization-utils'
 ```
 
 ## Development Notes
@@ -270,5 +395,6 @@ import { utils } from "@/lib/utils"
 
 **Path Aliases:**
 - Both frontend projects use `@/*` to reference `./src/*`
-- This alias must be configured in both `tsconfig.json` and `tsconfig.app.json`
+- React (demo-app): configured in `tsconfig.json` and `tsconfig.app.json`
+- Vue (demo-backoffice-app): configured in `tsconfig.json`, `tsconfig.app.json`, and `vite.config.ts`
 - Each project's alias is scoped to its own `src/` directory (no cross-project imports)

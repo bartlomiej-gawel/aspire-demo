@@ -1,5 +1,5 @@
-import type { OrganizationStatus } from '@/types/organization'
-import { OrganizationStatus as OrgStatus } from '@/types/organization'
+import type { OrganizationStatus, OrganizationEmployeeStatus } from '@/types/organization'
+import { OrganizationStatus as OrgStatus, OrganizationEmployeeStatus as EmpStatus } from '@/types/organization'
 
 export function getOrganizationStatusLabel(status: OrganizationStatus): string {
   switch (status) {
@@ -23,6 +23,38 @@ export function getOrganizationStatusVariant(
     case OrgStatus.Inactive:
       return 'secondary'
     case OrgStatus.Archived:
+      return 'outline'
+    default:
+      return 'outline'
+  }
+}
+
+export function getEmployeeStatusLabel(status: OrganizationEmployeeStatus): string {
+  switch (status) {
+    case EmpStatus.Inactive:
+      return 'Inactive'
+    case EmpStatus.Invited:
+      return 'Invited'
+    case EmpStatus.Active:
+      return 'Active'
+    case EmpStatus.Archived:
+      return 'Archived'
+    default:
+      return 'Unknown'
+  }
+}
+
+export function getEmployeeStatusVariant(
+  status: OrganizationEmployeeStatus,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (status) {
+    case EmpStatus.Active:
+      return 'default'
+    case EmpStatus.Invited:
+      return 'secondary'
+    case EmpStatus.Inactive:
+      return 'secondary'
+    case EmpStatus.Archived:
       return 'outline'
     default:
       return 'outline'

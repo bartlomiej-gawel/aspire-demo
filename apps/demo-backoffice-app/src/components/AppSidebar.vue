@@ -22,7 +22,7 @@ const data = {
   navMain: [
     {
       title: 'Organizations',
-      url: '#',
+      url: '#organizations',
       icon: Building2,
       isActive: true,
     },

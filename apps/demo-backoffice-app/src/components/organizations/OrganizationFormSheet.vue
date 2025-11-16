@@ -18,14 +18,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 interface Props {
@@ -50,7 +42,6 @@ watch(() => props.open, (isOpen) => {
     if (props.organization) {
       // Edit mode
       name.value = props.organization.name
-      status.value = props.organization.status
       admins.value = []
     }
     else {
@@ -83,11 +74,10 @@ function removeAdmin(index: number) {
 
 function handleSubmit() {
   if (props.organization) {
-    // Edit mode - only update name and status
+    // Edit mode - only update name
     emit('save', {
       id: props.organization.id,
       name: name.value,
-      status: status.value,
     })
   }
   else {
@@ -124,23 +114,28 @@ function handleSubmit() {
       </div>
 
       <form @submit.prevent="handleSubmit" class="flex-1 flex flex-col overflow-hidden">
-        <Tabs :default-value="organization ? 'general' : 'basic'" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Edit Mode: Simple Form -->
+        <div v-if="organization" class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+          <div class="grid gap-1.5">
+            <Label for="edit-name">Organization Name</Label>
+            <Input
+              id="edit-name"
+              v-model="name"
+              placeholder="Enter organization name"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Create Mode: Tabs -->
+        <Tabs v-else default-value="basic" class="flex-1 flex flex-col overflow-hidden">
           <div class="px-6 pt-4">
-            <TabsList class="grid w-full" :class="organization ? 'grid-cols-3' : 'grid-cols-2'">
-              <TabsTrigger v-if="!organization" value="basic">
+            <TabsList class="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger v-if="!organization" value="administrators">
+              <TabsTrigger value="administrators">
                 Administrators
-              </TabsTrigger>
-              <TabsTrigger v-if="organization" value="general">
-                General
-              </TabsTrigger>
-              <TabsTrigger v-if="organization" value="locations">
-                Locations
-              </TabsTrigger>
-              <TabsTrigger v-if="organization" value="employees">
-                Employees
               </TabsTrigger>
             </TabsList>
           </div>
@@ -234,55 +229,6 @@ function handleSubmit() {
                     @update:model-value="admin.phone = ($event as string) || null"
                   />
                 </div>
-              </div>
-            </TabsContent>
-
-            <!-- Edit Mode: General Tab -->
-            <TabsContent v-if="organization" value="general" class="space-y-5 mt-5">
-              <div class="grid gap-1.5">
-                <Label for="edit-name">Organization Name</Label>
-                <Input
-                  id="edit-name"
-                  v-model="name"
-                  placeholder="Enter organization name"
-                  required
-                />
-              </div>
-
-              <div class="grid gap-1.5">
-                <Label for="status">Status</Label>
-                <Select v-model="status">
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem :value="OrganizationStatus.Inactive">
-                        Inactive
-                      </SelectItem>
-                      <SelectItem :value="OrganizationStatus.Active">
-                        Active
-                      </SelectItem>
-                      <SelectItem :value="OrganizationStatus.Archived">
-                        Archived
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
-
-            <!-- Edit Mode: Locations Tab -->
-            <TabsContent v-if="organization" value="locations" class="mt-5">
-              <div class="flex items-center justify-center h-[300px] text-muted-foreground">
-                <p>Locations management coming soon</p>
-              </div>
-            </TabsContent>
-
-            <!-- Edit Mode: Employees Tab -->
-            <TabsContent v-if="organization" value="employees" class="mt-5">
-              <div class="flex items-center justify-center h-[300px] text-muted-foreground">
-                <p>Employees management coming soon</p>
               </div>
             </TabsContent>
           </div>

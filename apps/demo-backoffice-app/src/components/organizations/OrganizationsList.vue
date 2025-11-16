@@ -19,7 +19,13 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil } from 'lucide-vue-next'
+import { Plus, MoreVertical, Pencil, Users } from 'lucide-vue-next'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const organizations = ref<Organization[]>(mockOrganizations)
 const selectedOrganization = ref<Organization | null>(null)
@@ -90,12 +96,12 @@ function handleSave(data: Partial<Organization> | CreateOrganizationData) {
     organizations.value.push(newOrganization)
   }
   else if (data.id) {
-    // Edit existing organization
+    // Edit existing organization - only update name
     organizations.value = organizations.value.map(org =>
       org.id === data.id
         ? {
             ...org,
-            ...data,
+            name: data.name!,
             updatedAt: new Date().toISOString(),
           }
         : org,
@@ -131,8 +137,8 @@ function handleSave(data: Partial<Organization> | CreateOrganizationData) {
             <TableHead>Employees</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Updated At</TableHead>
-            <TableHead class="w-[100px]">
-              Actions
+            <TableHead class="w-[70px]">
+              <span class="sr-only">Actions</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -160,13 +166,25 @@ function handleSave(data: Partial<Organization> | CreateOrganizationData) {
               {{ formatDate(organization.updatedAt) }}
             </TableCell>
             <TableCell>
-              <Button
-                variant="ghost"
-                size="sm"
-                @click="handleEdit(organization)"
-              >
-                <Pencil class="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical class="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem @click="handleEdit(organization)">
+                    <Pencil class="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem as-child>
+                    <a :href="`#employees/${organization.id}`">
+                      <Users class="mr-2 h-4 w-4" />
+                      View Employees
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
           </TableRow>
         </TableBody>
