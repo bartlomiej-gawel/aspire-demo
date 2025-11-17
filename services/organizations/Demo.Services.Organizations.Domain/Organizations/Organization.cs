@@ -13,15 +13,18 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
     private Organization(
         OrganizationId id,
+        OrganizationSubscription subscription,
         string name) : base(id)
     {
         Name = name;
+        Subscription = subscription;
         Status = OrganizationStatus.Inactive;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = null;
     }
 
     public string Name { get; private set; } = null!;
+    public OrganizationSubscription Subscription { get; private set; } = null!;
     public OrganizationStatus Status { get; private set; }
     public DateTime CreatedAt { get; }
     public DateTime? UpdatedAt { get; private set; }
@@ -37,8 +40,11 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
         var organizationId = OrganizationId.Create();
 
+        var organizationSubscription = OrganizationSubscription.CreateBackofficeTrial(organizationAdmins.Count);
+
         var organization = new Organization(
             organizationId,
+            organizationSubscription,
             organizationName);
 
         var defaultLocation = OrganizationLocation.CreateDefault(
@@ -61,18 +67,5 @@ public sealed class Organization : AggregateRoot<OrganizationId>
         }
 
         return organization;
-    }
-
-    public static Organization CreateFromRegistration()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Update(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Organization name is required to update");
-
-        Name = name;
     }
 }
