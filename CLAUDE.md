@@ -193,9 +193,10 @@ The solution follows a domain-driven design approach with services organized by 
 **Organizations Service** (`services/organizations/`):
 - Api layer: ASP.NET Core Web API
 - Domain layer: Business logic and entities (implements DDD building blocks)
-  - `Organization`: Aggregate root managing locations and employees
+  - `Organization`: Aggregate root managing locations, employees, and subscriptions
   - `OrganizationLocation`: Entity representing physical locations
   - `OrganizationEmployee`: Entity representing employees assigned to locations
+  - `OrganizationSubscription`: Value object representing subscription details
   - `OrganizationId`, `OrganizationLocationId`, `OrganizationEmployeeId`: Strongly-typed IDs
 - Infrastructure layer: Data access and external integrations
 
@@ -327,20 +328,31 @@ Key patterns demonstrated:
 - **Lucide Vue Next**: Icon library
 - **tailwind-merge & clsx**: Utility class management
 
-**Backoffice Application Structure:**
-- `src/components/organizations/` - Organization management components
-  - `OrganizationsList.vue` - Main list view with create/edit capabilities
-  - `OrganizationFormSheet.vue` - Side sheet for creating/editing organizations
-  - `OrganizationEmployeesList.vue` - Employee list for specific organization
-- `src/components/ui/` - shadcn-vue UI components (Table, Button, Badge, Sheet, Dropdown, etc.)
-- `src/types/organization.ts` - TypeScript types matching backend domain
-- `src/data/mock-organizations.ts` - Mock data for development
-- `src/lib/organization-utils.ts` - Helper functions (formatters, status labels)
+**Backoffice Application Structure (VSA - Vertical Slice Architecture):**
+- `src/features/` - Feature-based modules (each feature is self-contained)
+  - `organizations/` - Organization management feature
+    - `components/` - Feature-specific components
+      - `OrganizationsList.vue` - Main list view with create/edit capabilities
+      - `OrganizationFormSheet.vue` - Side sheet for creating/editing organizations
+      - `OrganizationDetails.vue` - Tabbed detail view for a single organization
+      - `OrganizationOverviewTab.vue` - Overview tab showing organization info
+      - `OrganizationEmployeesTab.vue` - Employees tab within details view
+      - `OrganizationEmployeesList.vue` - Standalone employee list
+    - `types/` - Feature-specific TypeScript types
+    - `data/` - Mock data for development
+    - `lib/` - Feature-specific utilities
+    - `index.ts` - Barrel export for the feature
+- `src/components/` - Shared application components
+  - `ui/` - shadcn-vue UI components (Table, Button, Badge, Sheet, etc.)
+  - `AppSidebar.vue` - Application sidebar
+  - `NavMain.vue` - Navigation component
+- `src/lib/utils.ts` - Shared utility functions (kept at root for shadcn-vue compatibility)
 
 **Backoffice Routing:**
 - `#organizations` - Main organizations list
-- `#employees/:organizationId` - Employees for specific organization
-- Breadcrumbs show navigation path (Backoffice > Organizations > [Org Name] > Employees)
+- `#details/:organizationId` - Organization details with tabs (Overview, Employees, Locations, Subscriptions)
+- `#employees/:organizationId` - Direct employees list for specific organization
+- Breadcrumbs show navigation path (Backoffice > Organizations > [Org Name] > ...)
 
 **Backoffice vs Owner Responsibilities:**
 
@@ -398,3 +410,209 @@ import { formatDate } from '@/lib/organization-utils'
 - React (demo-app): configured in `tsconfig.json` and `tsconfig.app.json`
 - Vue (demo-backoffice-app): configured in `tsconfig.json`, `tsconfig.app.json`, and `vite.config.ts`
 - Each project's alias is scoped to its own `src/` directory (no cross-project imports)
+
+## Vue.js Best Practices (2025/2026)
+
+This section documents Vue.js best practices for future reference when evolving the backoffice application.
+
+### Architecture
+
+**Feature-based / Vertical Slice Architecture (VSA)**
+```
+src/
+  features/
+    organizations/
+      components/
+      composables/
+      types/
+      api/
+      index.ts
+    employees/
+      ...
+  shared/
+    components/
+    composables/
+    utils/
+```
+- Group by functionality, not file type
+- Each feature is self-contained and easy to move/remove
+- `index.ts` exports public API of the feature
+
+**Composables as main pattern**
+- Extract logic to composables (`use*.ts`)
+- One composable = one responsibility
+- Use composables instead of mixins (deprecated)
+
+```typescript
+// useOrganizations.ts
+export function useOrganizations() {
+  const organizations = ref<Organization[]>([])
+  const isLoading = ref(false)
+
+  async function fetchOrganizations() { ... }
+  function archiveOrganization(id: string) { ... }
+
+  return {
+    organizations: readonly(organizations),
+    isLoading: readonly(isLoading),
+    fetchOrganizations,
+    archiveOrganization,
+  }
+}
+```
+
+### State Management
+
+**Pinia as standard**
+- Official store for Vue 3
+- Setup stores (Composition API style) > Options stores
+- Stores per feature, not one global
+
+```typescript
+// stores/organizations.ts
+export const useOrganizationsStore = defineStore('organizations', () => {
+  const items = ref<Organization[]>([])
+
+  const activeOrganizations = computed(() =>
+    items.value.filter(o => o.status !== 'archived')
+  )
+
+  return { items, activeOrganizations }
+})
+```
+
+**When to use what:**
+- `ref`/`reactive` - local component state
+- Composables - shared logic without persistence
+- Pinia - global state, API cache, persistence
+
+### TypeScript
+
+**Strict TypeScript**
+- `strict: true` in tsconfig
+- Avoid `any` - use `unknown` + type guards
+- Generic composables with proper typing
+
+**Typed Props and Emits**
+```typescript
+// Preferred
+defineProps<{
+  organization: Organization
+  isEditing?: boolean
+}>()
+
+defineEmits<{
+  save: [data: OrganizationData]
+  cancel: []
+}>()
+```
+
+### Component Patterns
+
+**Compound Components**
+```vue
+<DataTable>
+  <DataTableHeader>
+    <DataTableColumn field="name" sortable />
+  </DataTableHeader>
+  <DataTableBody />
+</DataTable>
+```
+
+**Renderless / Headless Components**
+- Logic without UI (like Radix Vue)
+- Easy styling and customization
+
+**Smart vs Dumb Components**
+- **Container (Smart)**: fetch data, manage state
+- **Presentational (Dumb)**: only props + emit, no side effects
+
+### API and Data Fetching
+
+**TanStack Query (Vue Query)**
+```typescript
+const { data, isLoading, error } = useQuery({
+  queryKey: ['organizations'],
+  queryFn: fetchOrganizations,
+})
+```
+- Automatic caching
+- Refetch, retry, stale-while-revalidate
+- Optimistic updates
+
+**API Layer**
+```typescript
+// api/organizations.ts
+export const organizationsApi = {
+  getAll: () => fetch('/api/organizations').then(r => r.json()),
+  getById: (id: string) => fetch(`/api/organizations/${id}`).then(r => r.json()),
+  archive: (id: string) => fetch(`/api/organizations/${id}/archive`, { method: 'POST' }),
+}
+```
+
+### Routing
+
+**Vue Router best practices**
+- Lazy loading routes (`() => import(...)`)
+- Route guards in separate files
+- Typed routes (vue-router 4.4+)
+
+```typescript
+// Typed routes
+router.push({ name: 'organization-details', params: { id } })
+```
+
+### Testing
+
+**Vitest + Vue Test Utils**
+- Unit tests for composables
+- Component tests for interactions
+- E2E with Playwright/Cypress
+
+**Testing Library approach**
+```typescript
+// Test behavior, not implementation
+expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
+await userEvent.click(archiveButton)
+expect(screen.getByText('Organization archived')).toBeInTheDocument()
+```
+
+### Performance
+
+**Optimizations**
+- `v-once` for static content
+- `v-memo` for expensive lists
+- `shallowRef` / `shallowReactive` when deep reactivity not needed
+- Virtual scrolling for long lists (vue-virtual-scroller)
+
+**Code Splitting**
+- Async components: `defineAsyncComponent(() => import(...))`
+- Route-based splitting
+
+### Other
+
+**Error Handling**
+- Global error handler
+- Error boundaries (component handling children errors)
+- Typed errors
+
+**Accessibility (a11y)**
+- Semantic HTML
+- ARIA attributes
+- Keyboard navigation
+- Focus management
+
+**Tooling 2025**
+- **Vite** - build tool
+- **Vitest** - testing
+- **ESLint** + **Prettier** - linting/formatting
+- **Vue DevTools** - debugging
+- **Nuxt 4** - if you need SSR/SSG
+
+### Future Improvements for Backoffice App
+
+1. **Extract composables** - e.g., `useOrganizations()`, `useArchiveDialog()`
+2. **API layer** - prepare for real API integration
+3. **Pinia store** - for shared organization state
+4. **Vue Query** - for data fetching and caching
+5. **Route-based code splitting** - lazy load feature modules

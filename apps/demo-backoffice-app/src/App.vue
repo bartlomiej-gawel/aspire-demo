@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
-import OrganizationsList from '@/components/organizations/OrganizationsList.vue'
-import OrganizationEmployeesList from '@/components/organizations/OrganizationEmployeesList.vue'
-import { mockOrganizations } from '@/data/mock-organizations'
+import OrganizationsList from '@/features/organizations/components/OrganizationsList.vue'
+import OrganizationEmployeesList from '@/features/organizations/components/OrganizationEmployeesList.vue'
+import OrganizationDetails from '@/features/organizations/components/OrganizationDetails.vue'
+import { mockOrganizations } from '@/features/organizations/data/mock-organizations'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,7 +20,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 
-const currentView = ref<'organizations' | 'employees'>('organizations')
+const currentView = ref<'organizations' | 'employees' | 'details'>('organizations')
 const currentOrganizationId = ref<string | null>(null)
 
 const currentOrganization = computed(() => {
@@ -29,7 +30,12 @@ const currentOrganization = computed(() => {
 
 function updateView() {
   const hash = window.location.hash.slice(1) // Remove #
-  if (hash.startsWith('employees/')) {
+  if (hash.startsWith('details/')) {
+    const orgId = hash.split('/')[1] || null
+    currentView.value = 'details'
+    currentOrganizationId.value = orgId
+  }
+  else if (hash.startsWith('employees/')) {
     const orgId = hash.split('/')[1] || null
     currentView.value = 'employees'
     currentOrganizationId.value = orgId
@@ -64,6 +70,17 @@ onMounted(() => {
             <BreadcrumbItem v-if="currentView === 'organizations'">
               <BreadcrumbPage>Organizations</BreadcrumbPage>
             </BreadcrumbItem>
+            <template v-else-if="currentView === 'details'">
+              <BreadcrumbItem>
+                <BreadcrumbLink href="#organizations">
+                  Organizations
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator class="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{{ currentOrganization?.name || 'Unknown' }}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </template>
             <template v-else-if="currentView === 'employees'">
               <BreadcrumbItem>
                 <BreadcrumbLink href="#organizations">
@@ -86,6 +103,10 @@ onMounted(() => {
       </header>
       <div class="flex flex-1 flex-col gap-4 p-4">
         <OrganizationsList v-if="currentView === 'organizations'" />
+        <OrganizationDetails
+          v-else-if="currentView === 'details'"
+          :organization-id="currentOrganizationId!"
+        />
         <OrganizationEmployeesList
           v-else-if="currentView === 'employees'"
           :organization-id="currentOrganizationId!"

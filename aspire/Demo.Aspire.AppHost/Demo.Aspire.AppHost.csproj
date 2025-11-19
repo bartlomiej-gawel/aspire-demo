@@ -17,8 +17,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\gateway\Demo.Gateway\Demo.Gateway.csproj"/>
+        <ProjectReference Include="..\..\services\communications\Demo.Services.Communications.Api\Demo.Services.Communications.Api.csproj"/>
         <ProjectReference Include="..\..\services\identity\Demo.Services.Identity.Api\Demo.Services.Identity.Api.csproj"/>
         <ProjectReference Include="..\..\services\organizations\Demo.Services.Organizations.Api\Demo.Services.Organizations.Api.csproj"/>
+        <ProjectReference Include="..\..\services\subscriptions\Demo.Services.Subscriptions.Api\Demo.Services.Subscriptions.Api.csproj"/>
     </ItemGroup>
 
 </Project>

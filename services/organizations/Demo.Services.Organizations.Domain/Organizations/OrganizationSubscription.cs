@@ -41,6 +41,20 @@ public sealed class OrganizationSubscription : ValueObject
             TrialSeatLimit - organizationAdminsCount);
     }
 
+    public static OrganizationSubscription CreateCanceled(
+        OrganizationSubscriptionPlan plan,
+        DateTime expiresAt,
+        int totalSeats,
+        int availableSeats)
+    {
+        return new OrganizationSubscription(
+            plan,
+            OrganizationSubscriptionStatus.Canceled,
+            expiresAt,
+            totalSeats,
+            availableSeats);
+    }
+
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Plan;

@@ -1,11 +1,13 @@
-import type { Organization } from '@/types/organization'
+import type { Organization } from '../types'
 import {
   OrganizationStatus,
   OrganizationLocationStatus,
   OrganizationEmployeeStatus,
   OrganizationEmployeeRole,
+  OrganizationSubscriptionPlan,
+  OrganizationSubscriptionStatus,
   DayOfWeek,
-} from '@/types/organization'
+} from '../types'
 
 const createDefaultOpeningHours = () => ({
   weekly: {
@@ -23,6 +25,13 @@ export const mockOrganizations: Organization[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440001',
     name: 'Acme Corporation',
+    subscription: {
+      plan: OrganizationSubscriptionPlan.Platinum,
+      status: OrganizationSubscriptionStatus.Active,
+      expiresAt: '2025-01-15T10:00:00Z',
+      totalSeats: 100,
+      availableSeats: 52,
+    },
     status: OrganizationStatus.Active,
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-03-20T14:30:00Z',
@@ -88,6 +97,13 @@ export const mockOrganizations: Organization[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440002',
     name: 'TechStart Solutions',
+    subscription: {
+      plan: OrganizationSubscriptionPlan.Platinum,
+      status: OrganizationSubscriptionStatus.Trial,
+      expiresAt: '2024-11-24T09:00:00Z',
+      totalSeats: 50,
+      availableSeats: 49,
+    },
     status: OrganizationStatus.Active,
     createdAt: '2024-02-10T09:00:00Z',
     updatedAt: null,
@@ -126,6 +142,13 @@ export const mockOrganizations: Organization[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440003',
     name: 'Global Ventures Inc',
+    subscription: {
+      plan: OrganizationSubscriptionPlan.Gold,
+      status: OrganizationSubscriptionStatus.Active,
+      expiresAt: '2025-03-05T14:00:00Z',
+      totalSeats: 25,
+      availableSeats: 24,
+    },
     status: OrganizationStatus.Inactive,
     createdAt: '2024-03-05T14:00:00Z',
     updatedAt: null,
@@ -148,6 +171,13 @@ export const mockOrganizations: Organization[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440004',
     name: 'Old Systems Corp',
+    subscription: {
+      plan: OrganizationSubscriptionPlan.Silver,
+      status: OrganizationSubscriptionStatus.Expired,
+      expiresAt: '2024-01-10T12:00:00Z',
+      totalSeats: 10,
+      availableSeats: 10,
+    },
     status: OrganizationStatus.Archived,
     createdAt: '2023-06-01T08:00:00Z',
     updatedAt: '2024-01-10T12:00:00Z',

@@ -7,6 +7,11 @@
         <Project Path="gateway/Demo.Gateway/Demo.Gateway.csproj" />
     </Folder>
     <Folder Name="/services/" />
+    <Folder Name="/services/communications/">
+        <Project Path="services/communications/Demo.Services.Communications.Api/Demo.Services.Communications.Api.csproj" />
+        <Project Path="services/communications/Demo.Services.Communications.Domain/Demo.Services.Communications.Domain.csproj" />
+        <Project Path="services/communications/Demo.Services.Communications.Infrastructure/Demo.Services.Communications.Infrastructure.csproj" />
+    </Folder>
     <Folder Name="/services/identity/">
         <Project Path="services/identity/Demo.Services.Identity.Api/Demo.Services.Identity.Api.csproj" />
         <Project Path="services/identity/Demo.Services.Identity.Domain/Demo.Services.Identity.Domain.csproj" />
@@ -16,5 +21,10 @@
         <Project Path="services/organizations/Demo.Services.Organizations.Api/Demo.Services.Organizations.Api.csproj" />
         <Project Path="services/organizations/Demo.Services.Organizations.Domain/Demo.Services.Organizations.Domain.csproj" />
         <Project Path="services/organizations/Demo.Services.Organizations.Infrastructure/Demo.Services.Organizations.Infrastructure.csproj" />
+    </Folder>
+    <Folder Name="/services/subscriptions/">
+        <Project Path="services/subscriptions/Demo.Services.Subscriptions.Api/Demo.Services.Subscriptions.Api.csproj" />
+        <Project Path="services/subscriptions/Demo.Services.Subscriptions.Domain/Demo.Services.Subscriptions.Domain.csproj" />
+        <Project Path="services/subscriptions/Demo.Services.Subscriptions.Infrastructure/Demo.Services.Subscriptions.Infrastructure.csproj" />
     </Folder>
 </Solution>

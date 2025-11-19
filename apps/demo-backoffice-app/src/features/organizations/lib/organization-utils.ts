@@ -1,5 +1,15 @@
-import type { OrganizationStatus, OrganizationEmployeeStatus } from '@/types/organization'
-import { OrganizationStatus as OrgStatus, OrganizationEmployeeStatus as EmpStatus } from '@/types/organization'
+import type {
+  OrganizationStatus,
+  OrganizationEmployeeStatus,
+  OrganizationSubscriptionPlan,
+  OrganizationSubscriptionStatus
+} from '../types'
+import {
+  OrganizationStatus as OrgStatus,
+  OrganizationEmployeeStatus as EmpStatus,
+  OrganizationSubscriptionPlan as SubPlan,
+  OrganizationSubscriptionStatus as SubStatus
+} from '../types'
 
 export function getOrganizationStatusLabel(status: OrganizationStatus): string {
   switch (status) {
@@ -72,4 +82,49 @@ export function formatDate(dateString: string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
+}
+
+export function getSubscriptionPlanLabel(plan: OrganizationSubscriptionPlan): string {
+  switch (plan) {
+    case SubPlan.Silver:
+      return 'Silver'
+    case SubPlan.Gold:
+      return 'Gold'
+    case SubPlan.Platinum:
+      return 'Platinum'
+    default:
+      return 'Unknown'
+  }
+}
+
+export function getSubscriptionStatusLabel(status: OrganizationSubscriptionStatus): string {
+  switch (status) {
+    case SubStatus.Trial:
+      return 'Trial'
+    case SubStatus.Active:
+      return 'Active'
+    case SubStatus.Canceled:
+      return 'Canceled'
+    case SubStatus.Expired:
+      return 'Expired'
+    default:
+      return 'Unknown'
+  }
+}
+
+export function getSubscriptionStatusVariant(
+  status: OrganizationSubscriptionStatus,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (status) {
+    case SubStatus.Active:
+      return 'default'
+    case SubStatus.Trial:
+      return 'secondary'
+    case SubStatus.Canceled:
+      return 'outline'
+    case SubStatus.Expired:
+      return 'destructive'
+    default:
+      return 'outline'
+  }
 }

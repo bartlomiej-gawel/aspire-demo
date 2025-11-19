@@ -6,6 +6,23 @@ export const OrganizationStatus = {
 
 export type OrganizationStatus = typeof OrganizationStatus[keyof typeof OrganizationStatus]
 
+export const OrganizationSubscriptionPlan = {
+  Silver: 2,
+  Gold: 3,
+  Platinum: 4
+} as const
+
+export type OrganizationSubscriptionPlan = typeof OrganizationSubscriptionPlan[keyof typeof OrganizationSubscriptionPlan]
+
+export const OrganizationSubscriptionStatus = {
+  Trial: 1,
+  Active: 2,
+  Canceled: 3,
+  Expired: 4
+} as const
+
+export type OrganizationSubscriptionStatus = typeof OrganizationSubscriptionStatus[keyof typeof OrganizationSubscriptionStatus]
+
 export const OrganizationLocationStatus = {
   Inactive: 1,
   Active: 2,
@@ -93,9 +110,18 @@ export interface OrganizationEmployee {
   updatedAt: string | null
 }
 
+export interface OrganizationSubscription {
+  plan: OrganizationSubscriptionPlan
+  status: OrganizationSubscriptionStatus
+  expiresAt: string
+  totalSeats: number
+  availableSeats: number
+}
+
 export interface Organization {
   id: string
   name: string
+  subscription: OrganizationSubscription
   status: OrganizationStatus
   createdAt: string
   updatedAt: string | null

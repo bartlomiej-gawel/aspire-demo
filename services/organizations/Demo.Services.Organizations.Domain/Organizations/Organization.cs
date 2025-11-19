@@ -68,4 +68,41 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
         return organization;
     }
+
+    public void Archive()
+    {
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Organization is already archived");
+
+        if (Subscription.Status is not OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot archive organization while subscription is still valid");
+
+        foreach (var location in _locations)
+            location.Archive();
+
+        var employeesToArchive = _employees
+            .Where(employee => employee.Role is not OrganizationEmployeeRole.Admin)
+            .ToList();
+
+        foreach (var employee in employeesToArchive)
+            employee.Archive();
+
+        Status = OrganizationStatus.Archived;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void OnSubscriptionCanceled()
+    {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Canceled or OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Subscription is already canceled or expired");
+
+        var canceledSubscription = OrganizationSubscription.CreateCanceled(
+            Subscription.Plan,
+            Subscription.ExpiresAt,
+            Subscription.TotalSeats,
+            Subscription.AvailableSeats);
+
+        Subscription = canceledSubscription;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

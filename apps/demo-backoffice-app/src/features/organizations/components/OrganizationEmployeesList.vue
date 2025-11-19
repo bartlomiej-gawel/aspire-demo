@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { mockOrganizations } from '@/data/mock-organizations'
+import { mockOrganizations } from '../data/mock-organizations'
 import {
   getEmployeeStatusLabel,
   getEmployeeStatusVariant,
   formatDate,
-} from '@/lib/organization-utils'
+} from '../lib/organization-utils'
 import {
   Table,
   TableBody,

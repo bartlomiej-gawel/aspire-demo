@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Organization, OrganizationEmployeeData, CreateOrganizationData } from '@/types/organization'
-import { OrganizationStatus } from '@/types/organization'
+import type { OrganizationEmployeeData, CreateOrganizationData } from '../types'
 import {
   Sheet,
   SheetContent,
@@ -22,34 +21,23 @@ import { Plus, Trash2 } from 'lucide-vue-next'
 
 interface Props {
   open: boolean
-  organization: Organization | null
 }
 
 interface Emits {
   (e: 'update:open', value: boolean): void
-  (e: 'save', data: Partial<Organization> | CreateOrganizationData): void
+  (e: 'save', data: CreateOrganizationData): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const name = ref('')
-const status = ref<OrganizationStatus>(OrganizationStatus.Inactive)
 const admins = ref<OrganizationEmployeeData[]>([])
 
 watch(() => props.open, (isOpen) => {
   if (isOpen) {
-    if (props.organization) {
-      // Edit mode
-      name.value = props.organization.name
-      admins.value = []
-    }
-    else {
-      // Create mode
-      name.value = ''
-      status.value = OrganizationStatus.Inactive
-      admins.value = [createEmptyAdmin()]
-    }
+    name.value = ''
+    admins.value = [createEmptyAdmin()]
   }
 })
 
@@ -73,24 +61,14 @@ function removeAdmin(index: number) {
 }
 
 function handleSubmit() {
-  if (props.organization) {
-    // Edit mode - only update name
-    emit('save', {
-      id: props.organization.id,
-      name: name.value,
-    })
+  const createData: CreateOrganizationData = {
+    organizationName: name.value,
+    organizationAdmins: admins.value.map(admin => ({
+      ...admin,
+      phone: admin.phone || null,
+    })),
   }
-  else {
-    // Create mode - send organization data with admins
-    const createData: CreateOrganizationData = {
-      organizationName: name.value,
-      organizationAdmins: admins.value.map(admin => ({
-        ...admin,
-        phone: admin.phone || null,
-      })),
-    }
-    emit('save', createData)
-  }
+  emit('save', createData)
   emit('update:open', false)
 }
 </script>
@@ -101,34 +79,16 @@ function handleSubmit() {
       <div class="px-6 pt-6">
         <SheetHeader>
           <SheetTitle class="text-xl">
-            {{ organization ? 'Edit Organization' : 'Create Organization' }}
+            Create Organization
           </SheetTitle>
           <SheetDescription>
-            {{
-              organization
-                ? 'Make changes to the organization details.'
-                : 'Add a new organization with at least one administrator.'
-            }}
+            Add a new organization with at least one administrator.
           </SheetDescription>
         </SheetHeader>
       </div>
 
       <form @submit.prevent="handleSubmit" class="flex-1 flex flex-col overflow-hidden">
-        <!-- Edit Mode: Simple Form -->
-        <div v-if="organization" class="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-          <div class="grid gap-1.5">
-            <Label for="edit-name">Organization Name</Label>
-            <Input
-              id="edit-name"
-              v-model="name"
-              placeholder="Enter organization name"
-              required
-            />
-          </div>
-        </div>
-
-        <!-- Create Mode: Tabs -->
-        <Tabs v-else default-value="basic" class="flex-1 flex flex-col overflow-hidden">
+        <Tabs default-value="basic" class="flex-1 flex flex-col overflow-hidden">
           <div class="px-6 pt-4">
             <TabsList class="grid w-full grid-cols-2">
               <TabsTrigger value="basic">
@@ -141,8 +101,7 @@ function handleSubmit() {
           </div>
 
           <div class="flex-1 overflow-y-auto px-6 pb-6">
-            <!-- Create Mode: Basic Info Tab -->
-            <TabsContent v-if="!organization" value="basic" class="space-y-5 mt-5">
+            <TabsContent value="basic" class="space-y-5 mt-5">
               <div class="grid gap-1.5">
                 <Label for="name">Organization Name</Label>
                 <Input
@@ -154,8 +113,7 @@ function handleSubmit() {
               </div>
             </TabsContent>
 
-            <!-- Create Mode: Administrators Tab -->
-            <TabsContent v-if="!organization" value="administrators" class="space-y-5 mt-5">
+            <TabsContent value="administrators" class="space-y-5 mt-5">
               <div class="flex items-center justify-between">
                 <p class="text-sm text-muted-foreground">
                   Add at least one administrator for this organization.
@@ -245,7 +203,7 @@ function handleSubmit() {
               Cancel
             </Button>
             <Button type="submit" class="w-full sm:w-auto">
-              {{ organization ? 'Save Changes' : 'Create Organization' }}
+              Create Organization
             </Button>
           </div>
         </div>

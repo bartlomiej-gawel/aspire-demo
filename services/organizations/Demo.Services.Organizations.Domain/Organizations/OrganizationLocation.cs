@@ -43,4 +43,13 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
             OrganizationLocationOpeningHours.CreateDefault(),
             OrganizationLocationStatus.Active);
     }
+
+    public void Archive()
+    {
+        if (Status is OrganizationLocationStatus.Archived)
+            throw new InvalidOperationException("Organization location is already archived");
+
+        Status = OrganizationLocationStatus.Archived;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

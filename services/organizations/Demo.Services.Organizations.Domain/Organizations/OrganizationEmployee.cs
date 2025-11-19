@@ -66,6 +66,15 @@ public sealed class OrganizationEmployee : Entity<OrganizationEmployeeId>
         return admin;
     }
 
+    public void Archive()
+    {
+        if (Status is OrganizationEmployeeStatus.Archived)
+            throw new InvalidOperationException("Employee is already archived");
+
+        Status = OrganizationEmployeeStatus.Archived;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void AssignToLocation(OrganizationLocationId locationId)
     {
         if (_locationIds.Contains(locationId))
