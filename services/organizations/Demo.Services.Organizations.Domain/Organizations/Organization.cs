@@ -71,11 +71,11 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
     public void Archive()
     {
-        if (Status is OrganizationStatus.Archived)
-            throw new InvalidOperationException("Organization is already archived");
-
         if (Subscription.Status is not OrganizationSubscriptionStatus.Expired)
             throw new InvalidOperationException("Cannot archive organization while subscription is still valid");
+
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Organization is already archived");
 
         foreach (var location in _locations)
             location.Archive();
@@ -93,19 +93,92 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
     public void AddLocation(
         string locationName,
-        OrganizationLocationOpeningHours openingHours,
-        OrganizationLocationAddress address)
+        OrganizationLocationOpeningHours locationOpeningHours,
+        OrganizationLocationAddress locationAddress)
     {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot add location to organization with expired subscription");
+
         if (Status is OrganizationStatus.Archived)
             throw new InvalidOperationException("Cannot add location to archived organization");
 
         var location = OrganizationLocation.Create(
             Id,
             locationName,
-            openingHours,
-            address);
+            locationOpeningHours,
+            locationAddress);
 
         _locations.Add(location);
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateLocation(
+        OrganizationLocationId locationId,
+        string locationName,
+        OrganizationLocationOpeningHours locationOpeningHours,
+        OrganizationLocationAddress locationAddress)
+    {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot update location of organization with expired subscription");
+
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Cannot update location of archived organization");
+
+        var location = _locations.FirstOrDefault(x => x.Id == locationId);
+        if (location is null)
+            throw new InvalidOperationException("Cannot update location that does not exist");
+
+        location.Update(
+            locationName,
+            locationOpeningHours,
+            locationAddress);
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ActivateLocation(OrganizationLocationId locationId)
+    {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot activate location of organization with expired subscription");
+
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Cannot activate location of archived organization");
+
+        var location = _locations.FirstOrDefault(x => x.Id == locationId);
+        if (location is null)
+            throw new InvalidOperationException("Cannot activate location that does not exist");
+
+        location.Activate();
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ArchiveLocation(OrganizationLocationId locationId)
+    {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot archive location of organization with expired subscription");
+
+        var location = _locations.FirstOrDefault(x => x.Id == locationId);
+        if (location is null)
+            throw new InvalidOperationException("Cannot archive location that does not exist");
+
+        var activeLocationsCount = _locations.Count(x => x.Status is OrganizationLocationStatus.Active);
+        if (activeLocationsCount <= 1)
+            throw new InvalidOperationException("Cannot archive last active location of organization");
+
+        var blockingEmployees = _employees
+            .Where(x =>
+                x.Status is OrganizationEmployeeStatus.Active &&
+                x.LocationIds.Contains(locationId) &&
+                x.LocationIds.Count == 1)
+            .ToList();
+
+        if (blockingEmployees.Count > 0)
+            throw new InvalidOperationException("Cannot archive location. Reassign employees who are assigned only to this location.");
+
+        location.Archive();
+
         UpdatedAt = DateTime.UtcNow;
     }
 

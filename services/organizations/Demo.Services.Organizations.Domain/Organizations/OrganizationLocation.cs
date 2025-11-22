@@ -12,24 +12,24 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
         OrganizationLocationId id,
         OrganizationId organizationId,
         string name,
-        OrganizationLocationOpeningHours openingHours,
         OrganizationLocationStatus status,
+        OrganizationLocationOpeningHours openingHours,
         OrganizationLocationAddress? address = null) : base(id)
     {
         OrganizationId = organizationId;
         Name = name;
+        Status = status;
         OpeningHours = openingHours;
         Address = address;
-        Status = status;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = null;
     }
 
     public OrganizationId OrganizationId { get; } = null!;
     public string Name { get; private set; } = null!;
+    public OrganizationLocationStatus Status { get; private set; }
     public OrganizationLocationOpeningHours OpeningHours { get; private set; } = null!;
     public OrganizationLocationAddress? Address { get; private set; }
-    public OrganizationLocationStatus Status { get; private set; }
     public DateTime CreatedAt { get; }
     public DateTime? UpdatedAt { get; private set; }
 
@@ -41,8 +41,8 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
             OrganizationLocationId.Create(),
             organizationId,
             $"{organizationName} HQ",
-            OrganizationLocationOpeningHours.CreateDefault(),
-            OrganizationLocationStatus.Active);
+            OrganizationLocationStatus.Active,
+            OrganizationLocationOpeningHours.CreateDefault());
     }
 
     public static OrganizationLocation Create(
@@ -58,15 +58,41 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
             OrganizationLocationId.Create(),
             organizationId,
             name,
-            openingHours,
             OrganizationLocationStatus.Active,
+            openingHours,
             address);
+    }
+
+    public void Update(
+        string name,
+        OrganizationLocationOpeningHours openingHours,
+        OrganizationLocationAddress address)
+    {
+        if (Status is OrganizationLocationStatus.Archived)
+            throw new InvalidOperationException("Cannot update archived location");
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Location name cannot be empty");
+
+        Name = name;
+        OpeningHours = openingHours;
+        Address = address;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        if (Status is OrganizationLocationStatus.Active)
+            throw new InvalidOperationException("Location is already active");
+
+        Status = OrganizationLocationStatus.Active;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Archive()
     {
         if (Status is OrganizationLocationStatus.Archived)
-            throw new InvalidOperationException("Organization location is already archived");
+            throw new InvalidOperationException("Location is already archived");
 
         Status = OrganizationLocationStatus.Archived;
         UpdatedAt = DateTime.UtcNow;

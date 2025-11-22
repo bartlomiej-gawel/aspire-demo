@@ -77,10 +77,12 @@ public sealed class OrganizationEmployee : Entity<OrganizationEmployeeId>
 
     public void AssignToLocation(OrganizationLocationId locationId)
     {
-        if (_locationIds.Contains(locationId))
-            return;
+        if (Status is OrganizationEmployeeStatus.Archived)
+            throw new InvalidOperationException("Cannot assign archived employee to location");
 
         _locationIds.Add(locationId);
+
+        UpdatedAt = DateTime.UtcNow;
     }
 }
 
