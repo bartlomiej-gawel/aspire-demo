@@ -13,12 +13,13 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
         OrganizationId organizationId,
         string name,
         OrganizationLocationOpeningHours openingHours,
-        OrganizationLocationStatus status) : base(id)
+        OrganizationLocationStatus status,
+        OrganizationLocationAddress? address = null) : base(id)
     {
         OrganizationId = organizationId;
         Name = name;
         OpeningHours = openingHours;
-        Address = null;
+        Address = address;
         Status = status;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = null;
@@ -39,9 +40,27 @@ public sealed class OrganizationLocation : Entity<OrganizationLocationId>
         return new OrganizationLocation(
             OrganizationLocationId.Create(),
             organizationId,
-            $"{organizationName} Headquarters",
+            $"{organizationName} HQ",
             OrganizationLocationOpeningHours.CreateDefault(),
             OrganizationLocationStatus.Active);
+    }
+
+    public static OrganizationLocation Create(
+        OrganizationId organizationId,
+        string name,
+        OrganizationLocationOpeningHours openingHours,
+        OrganizationLocationAddress address)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Location name cannot be empty");
+
+        return new OrganizationLocation(
+            OrganizationLocationId.Create(),
+            organizationId,
+            name,
+            openingHours,
+            OrganizationLocationStatus.Active,
+            address);
     }
 
     public void Archive()

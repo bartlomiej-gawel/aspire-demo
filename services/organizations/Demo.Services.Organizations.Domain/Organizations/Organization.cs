@@ -91,6 +91,24 @@ public sealed class Organization : AggregateRoot<OrganizationId>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void AddLocation(
+        string locationName,
+        OrganizationLocationOpeningHours openingHours,
+        OrganizationLocationAddress address)
+    {
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Cannot add location to archived organization");
+
+        var location = OrganizationLocation.Create(
+            Id,
+            locationName,
+            openingHours,
+            address);
+
+        _locations.Add(location);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void OnSubscriptionCanceled()
     {
         if (Subscription.Status is OrganizationSubscriptionStatus.Canceled or OrganizationSubscriptionStatus.Expired)
