@@ -33,7 +33,10 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
     public static Organization CreateFromBackoffice(
         string organizationName,
-        List<OrganizationEmployeeData> organizationAdmins)
+        string adminFirstName,
+        string adminLastName,
+        string adminEmail,
+        string? adminPhone)
     {
         if (organizationAdmins.Count == 0)
             throw new ArgumentException("At least one admin is required");
@@ -91,6 +94,40 @@ public sealed class Organization : AggregateRoot<OrganizationId>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void AddEmployee(
+        OrganizationLocationId locationId,
+        OrganizationEmployeeRole employeeRole,
+        string employeeFirstName,
+        string employeeLastName,
+        string employeeEmail,
+        string? employeePhone)
+    {
+        if (Subscription.Status is OrganizationSubscriptionStatus.Expired)
+            throw new InvalidOperationException("Cannot add employee to organization with expired subscription");
+
+        if (Status is OrganizationStatus.Archived)
+            throw new InvalidOperationException("Cannot add employee to archived organization");
+
+        var location = _locations.FirstOrDefault(x =>
+            x.Id == locationId &&
+            x.Status is OrganizationLocationStatus.Active);
+
+        if (location is null)
+            throw new InvalidOperationException("Cannot add employee to non-existing or inactive location");
+    }
+
+    public void UpdateEmployee()
+    {
+    }
+
+    public void ActivateEmployee()
+    {
+    }
+
+    public void ArchiveEmployee()
+    {
+    }
+
     public void AddLocation(
         string locationName,
         OrganizationLocationOpeningHours locationOpeningHours,
@@ -127,7 +164,7 @@ public sealed class Organization : AggregateRoot<OrganizationId>
 
         var location = _locations.FirstOrDefault(x => x.Id == locationId);
         if (location is null)
-            throw new InvalidOperationException("Cannot update location that does not exist");
+            throw new InvalidOperationException("Cannot update location that does not exist or is not active");
 
         location.Update(
             locationName,

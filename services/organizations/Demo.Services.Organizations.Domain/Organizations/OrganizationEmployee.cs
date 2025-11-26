@@ -17,13 +17,14 @@ public sealed class OrganizationEmployee : Entity<OrganizationEmployeeId>
         string lastName,
         string email,
         OrganizationEmployeeStatus status,
-        OrganizationEmployeeRole role) : base(id)
+        OrganizationEmployeeRole role,
+        string? phone = null) : base(id)
     {
         OrganizationId = organizationId;
         FirstName = firstName;
         LastName = lastName;
         Email = email;
-        Phone = null;
+        Phone = phone;
         Status = status;
         Role = role;
         CreatedAt = DateTime.UtcNow;
@@ -41,29 +42,32 @@ public sealed class OrganizationEmployee : Entity<OrganizationEmployeeId>
     public DateTime? UpdatedAt { get; private set; }
     public IReadOnlyList<OrganizationLocationId> LocationIds => _locationIds.AsReadOnly();
 
-    public static OrganizationEmployee CreateAdmin(
+    public static OrganizationEmployee Create(
         OrganizationId organizationId,
-        OrganizationLocationId locationId,
+        OrganizationEmployeeRole role,
         string firstName,
         string lastName,
         string email,
         string? phone)
     {
-        var admin = new OrganizationEmployee(
+        if (string.IsNullOrWhiteSpace(firstName))
+            throw new ArgumentException("First name cannot be empty.", nameof(firstName));
+
+        if (string.IsNullOrWhiteSpace(lastName))
+            throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
+
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email cannot be empty.", nameof(email));
+
+        return new OrganizationEmployee(
             OrganizationEmployeeId.Create(),
             organizationId,
             firstName,
             lastName,
             email,
             OrganizationEmployeeStatus.Inactive,
-            OrganizationEmployeeRole.Admin);
-
-        if (!string.IsNullOrWhiteSpace(phone))
-            admin.Phone = phone;
-
-        admin.AssignToLocation(locationId);
-
-        return admin;
+            role,
+            phone);
     }
 
     public void Archive()
@@ -85,9 +89,3 @@ public sealed class OrganizationEmployee : Entity<OrganizationEmployeeId>
         UpdatedAt = DateTime.UtcNow;
     }
 }
-
-public sealed record OrganizationEmployeeData(
-    string FirstName,
-    string LastName,
-    string Email,
-    string? Phone);
